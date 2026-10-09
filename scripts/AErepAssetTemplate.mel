@@ -1,0 +1,106 @@
+// Attribute Editor template for the repAsset node.
+//
+// Shows the asset name, a dropdown of the node's representations that runs
+// repSwitch (so the switch is undoable) and the status, followed by the
+// regular transform sections.
+
+global proc string[] AErepAssetRepNames(string $node)
+{
+    string $names[];
+    int $indices[] = `getAttr -multiIndices ($node + ".representations")`;
+    for ($index in $indices) {
+        $names[size($names)] = `getAttr ($node + ".representations[" + $index + "].repName")`;
+    }
+    return $names;
+}
+
+global proc AErepAssetSwitch(string $node, string $menu)
+{
+    string $choice = `optionMenuGrp -query -value $menu`;
+    if ($choice == "" || $choice == "<none>") {
+        return;
+    }
+    if (catch(`repSwitch -asset $node -representation $choice`)) {
+        warning ("repAsset: could not switch " + $node + " to " + $choice);
+    }
+}
+
+global proc AErepAssetActiveNew(string $plug)
+{
+    setUITemplate -pushTemplate attributeEditorTemplate;
+    rowLayout -numberOfColumns 2 -adjustableColumn 1 AErepAssetActiveRow;
+        optionMenuGrp -label "Representation" AErepAssetActiveMenu;
+        image -width 20 -height 20 AErepAssetActiveIcon;
+    setParent ..;
+    setUITemplate -popTemplate;
+    AErepAssetActiveReplace $plug;
+}
+
+// Show the state icon (M/A/G/U, grey for nothing loaded, red for missing)
+// next to the dropdown, and keep the dropdown and icon in sync when the
+// representation changes from anywhere (panel, right-click menu, undo).
+global proc AErepAssetActiveRefresh(string $node)
+{
+    if (!`objExists $node` || !`control -exists AErepAssetActiveIcon`) {
+        return;
+    }
+    string $icon = python("from rep_switch import maya_scene; maya_scene.icon_path('" + $node + "')");
+    image -edit -image $icon AErepAssetActiveIcon;
+    string $loaded = `getAttr ($node + ".loadedRepresentation")`;
+    if ($loaded != "") {
+        optionMenuGrp -edit -value $loaded AErepAssetActiveMenu;
+    }
+}
+
+global proc AErepAssetActiveReplace(string $plug)
+{
+    string $buffer[];
+    tokenize $plug "." $buffer;
+    string $node = $buffer[0];
+    string $menu = "AErepAssetActiveMenu";
+
+    string $items[] = `optionMenuGrp -query -itemListLong $menu`;
+    if (size($items)) {
+        deleteUI $items;
+    }
+    string $names[] = AErepAssetRepNames($node);
+    string $loaded = `getAttr ($node + ".loadedRepresentation")`;
+    if ($loaded == "") {
+        menuItem -label "<none>" -parent ($menu + "|OptionMenu");
+    }
+    for ($name in $names) {
+        menuItem -label $name -parent ($menu + "|OptionMenu");
+    }
+    if ($loaded != "") {
+        optionMenuGrp -edit -value $loaded $menu;
+    }
+    optionMenuGrp -edit -changeCommand ("AErepAssetSwitch \"" + $node + "\" " + $menu) $menu;
+    AErepAssetActiveRefresh $node;
+    scriptJob -parent AErepAssetActiveIcon -replacePrevious
+        -attributeChange ($node + ".status") ("AErepAssetActiveRefresh \"" + $node + "\"");
+}
+
+global proc AErepAssetTemplate(string $nodeName)
+{
+    editorTemplate -beginScrollLayout;
+
+    editorTemplate -beginLayout "Asset Representation" -collapse 0;
+        editorTemplate -addControl "assetName";
+        editorTemplate -callCustom "AErepAssetActiveNew" "AErepAssetActiveReplace" "activeRepresentation";
+        editorTemplate -addControl "status";
+        editorTemplate -addControl "defaultRepresentation";
+    editorTemplate -endLayout;
+
+    editorTemplate -beginLayout "Representations" -collapse 1;
+        editorTemplate -addControl "representations";
+    editorTemplate -endLayout;
+
+    editorTemplate -suppress "loadedRepresentation";
+    editorTemplate -suppress "loadedContent";
+
+    AEtransformMain $nodeName;
+    AEtransformNoScroll $nodeName;
+
+    editorTemplate -addExtraControls;
+    editorTemplate -endScrollLayout;
+}

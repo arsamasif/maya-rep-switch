@@ -1,0 +1,5 @@
+# Example context rules: tokens match a representation name first, then a type.
+layout: [proxy, gpuCache, stage]
+anim: [anim, proxy]
+lighting: [stage, render]
+farm: [render, usd, alembic]

@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rep_switch"
+version = "1.0.0"
+description = "Switchable asset representations (mayaRef, alembic, gpuCache, USD) for Maya."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Arsam Ali" }]
+requires-python = ">=3.9"
+dependencies = ["PyYAML>=5.4"]
+
+[project.optional-dependencies]
+test = ["pytest>=7"]
+
+[tool.setuptools.packages.find]
+where = ["python"]
+
+[tool.pytest.ini_options]
+testpaths = ["python/rep_switch/test"]
+pythonpath = ["python"]

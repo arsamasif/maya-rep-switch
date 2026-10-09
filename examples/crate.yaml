@@ -1,0 +1,8 @@
+# Example manifest: relative paths resolve against this folder.
+asset: crate
+default: proxy
+representations:
+  proxy:  {type: gpuCache, path: publish/crate_proxy.abc}
+  anim:   {type: alembic,  path: publish/crate_anim.abc}
+  render: publish/crate_render.ma
+  stage:  publish/crate.usda
