@@ -1,6 +1,7 @@
 """Tests for rep_switch.install that do not need Maya."""
 
 import os
+import re
 import sys
 import types
 
@@ -71,3 +72,12 @@ def test_ensure_yaml_reports_pip_failure(monkeypatch, tmp_path):
     assert install.ensure_yaml(str(tmp_path), runner=runner, python="mayapy") == (
         "PyYAML install failed: no network"
     )
+
+
+@pytest.mark.parametrize("file_name", ["package.py", "pyproject.toml"])
+def test_release_files_match_package_version(file_name):
+    # The module file is stamped with __version__, so a release bump has to
+    # touch all three places.
+    with open(os.path.join(REPO_ROOT, file_name), encoding="utf-8") as handle:
+        match = re.search(r'^version = "(.+)"$', handle.read(), re.MULTILINE)
+    assert match and match.group(1) == __version__
