@@ -85,6 +85,13 @@ def test_invalid_document_is_a_manifest_error(tmp_path, name, text):
         manifest.read_manifest(str(path))
 
 
+def test_empty_yaml_manifest(tmp_path):
+    path = tmp_path / "empty.yaml"
+    path.write_text("# nothing published yet\n")
+    with pytest.raises(manifest.ManifestError, match="Manifest is empty"):
+        manifest.read_manifest(str(path))
+
+
 @pytest.mark.parametrize(
     "document, message",
     [

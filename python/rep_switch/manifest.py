@@ -50,6 +50,9 @@ def read_manifest(path):
     if not os.path.isfile(path):
         raise FileNotFoundError("Missing manifest: {0}".format(path))
     data = _load_document(path)
+    if data is None:
+        # An empty or comment-only YAML file loads as None.
+        raise ManifestError("Manifest is empty: {0}".format(path))
     return parse_manifest(data, base_dir=os.path.dirname(os.path.abspath(path)))
 
 
