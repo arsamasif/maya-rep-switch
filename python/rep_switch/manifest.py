@@ -108,16 +108,20 @@ def write_manifest(path, assets):
 
 def _load_document(path):
     extension = os.path.splitext(path)[1].lower()
+    if extension in JSON_EXTENSIONS:
+        parse, errors = json.loads, ValueError
+    elif extension in YAML_EXTENSIONS:
+        yaml = _yaml_module()
+        # YAMLError is not a ValueError, so it needs catching on its own.
+        parse, errors = yaml.safe_load, yaml.YAMLError
+    else:
+        raise ManifestError("Unsupported manifest extension: {0}".format(path))
     with open(path, encoding="utf-8") as handle:
         text = handle.read()
     try:
-        if extension in JSON_EXTENSIONS:
-            return json.loads(text)
-        if extension in YAML_EXTENSIONS:
-            return _yaml_module().safe_load(text)
-    except ValueError as error:
+        return parse(text)
+    except errors as error:
         raise ManifestError("Cannot parse {0}: {1}".format(path, error)) from error
-    raise ManifestError("Unsupported manifest extension: {0}".format(path))
 
 
 def _yaml_module():

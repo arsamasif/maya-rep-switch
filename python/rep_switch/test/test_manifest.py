@@ -75,9 +75,12 @@ def test_unsupported_extension(tmp_path):
         manifest.read_manifest(str(path))
 
 
-def test_invalid_json_is_a_manifest_error(tmp_path):
-    path = tmp_path / "broken.json"
-    path.write_text("{not json")
+@pytest.mark.parametrize(
+    "name, text", [("broken.json", "{not json"), ("broken.yaml", "asset: [crate\n")]
+)
+def test_invalid_document_is_a_manifest_error(tmp_path, name, text):
+    path = tmp_path / name
+    path.write_text(text)
     with pytest.raises(manifest.ManifestError, match="Cannot parse"):
         manifest.read_manifest(str(path))
 
