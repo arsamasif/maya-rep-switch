@@ -1,10 +1,12 @@
 """Tests for rep_switch.resolver."""
 
 import json
+import os
 
 import pytest
 
 from rep_switch import constants
+from rep_switch import manifest
 from rep_switch import resolver
 from rep_switch.test import conftest
 
@@ -130,3 +132,14 @@ def test_rules_from_environ(tmp_path):
     path.write_text(json.dumps({"review": ["render"]}))
     rules = resolver.rules_from_environ({constants.RULES_ENV: str(path)})
     assert rules == {"review": ("render",)}
+
+
+def test_example_rules_resolve_the_example_manifest():
+    rules = resolver.load_rules(os.path.join(conftest.EXAMPLES_DIR, "rules.yaml"))
+    (crate,) = manifest.read_manifest(os.path.join(conftest.EXAMPLES_DIR, "crate.yaml"))
+    chosen = {}
+    for context in rules:
+        resolution = resolver.resolve(crate, context, rules, lambda path: True)
+        assert resolution.reason == resolver.RULE
+        chosen[context] = resolution.representation.name
+    assert chosen == {"layout": "proxy", "anim": "anim", "lighting": "stage", "farm": "render"}

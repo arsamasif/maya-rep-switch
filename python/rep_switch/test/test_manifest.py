@@ -112,3 +112,16 @@ def test_duplicate_assets_rejected():
 def test_relative_paths_kept_without_base_dir():
     (asset,) = manifest.parse_manifest({"asset": "x", "representations": {"p": "geo/a.ma"}})
     assert asset.get("p").file_path == os.path.normpath("geo/a.ma")
+
+
+def test_example_manifest_reads():
+    path = os.path.join(conftest.EXAMPLES_DIR, "crate.yaml")
+    (asset,) = manifest.read_manifest(path)
+    assert asset.name == "crate"
+    assert asset.default == "proxy"
+    assert [rep.rep_type for rep in asset.representations] == [
+        constants.GPU_CACHE,
+        constants.ALEMBIC,
+        constants.MAYA_REF,
+        constants.USD,
+    ]

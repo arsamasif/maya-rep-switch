@@ -17,6 +17,10 @@ import pytest
 from rep_switch import constants
 from rep_switch import model
 
+EXAMPLES_DIR = os.path.normpath(
+    os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, os.pardir, "examples")
+)
+
 if importlib.util.find_spec("PySide6") or importlib.util.find_spec("PySide2"):
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     try:
