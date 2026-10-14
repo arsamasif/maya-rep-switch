@@ -189,13 +189,17 @@ def load_rules(path):
     """
     if not os.path.isfile(path):
         raise FileNotFoundError("Missing rules file: {0}".format(path))
-    with open(path, encoding="utf-8") as handle:
-        if path.lower().endswith((".yaml", ".yml")):
-            import yaml
+    if path.lower().endswith((".yaml", ".yml")):
+        import yaml
 
-            data = yaml.safe_load(handle)
-        else:
-            data = json.load(handle)
+        parse, errors = yaml.safe_load, yaml.YAMLError
+    else:
+        parse, errors = json.load, ValueError
+    with open(path, encoding="utf-8") as handle:
+        try:
+            data = parse(handle)
+        except errors as error:
+            raise ResolveError("Cannot parse rules {0}: {1}".format(path, error)) from error
     return validate_rules(data)
 
 

@@ -107,6 +107,16 @@ def test_load_rules_missing(tmp_path):
 
 
 @pytest.mark.parametrize(
+    "name, text", [("rules.json", "{layout: proxy"), ("rules.yaml", "layout: [proxy\n")]
+)
+def test_load_rules_unparsable(tmp_path, name, text):
+    path = tmp_path / name
+    path.write_text(text)
+    with pytest.raises(resolver.ResolveError, match="Cannot parse rules"):
+        resolver.load_rules(str(path))
+
+
+@pytest.mark.parametrize(
     "data", [{}, [], {"layout": []}, {"layout": "proxy"}, {"layout": ["proxy", 3]}]
 )
 def test_validate_rules_rejects_bad_data(data):
